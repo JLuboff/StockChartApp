@@ -12,7 +12,9 @@
     "async": "^2.5.0",
     "express": "^4.15.3",
     "google-stocks": "^1.0.1",
+    "hbs": "^4.0.1",
     "moment": "^2.18.1",
-    "quandl": "0.0.6"
+    "quandl": "0.0.6",
+    "socket.io": "^2.0.3"
   }
 }
