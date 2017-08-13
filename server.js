@@ -3,14 +3,16 @@ const express = require('express'),
       async = require('async'),
       hbs = require('hbs'),
       socket = require('socket.io'),
+      MongoClient = require('mongodb').MongoClient,
+      moment = require('moment'),
       port = process.env.PORT || 3000;
 
 var app = express();
 
 app.set('view engine', 'hbs');
 
-/*app.get('/', (req, res) => {
-  let stocks = ['fb'];
+/*app.get('/data', (req, res) => {
+  let stocks = ['fb', 'mmm'];
   let stockData = {};
 
   async.each(stocks, (el, cb) => {
@@ -20,16 +22,22 @@ app.set('view engine', 'hbs');
     })
   }, (err) => {
     if(err)throw err;
-//res.send(stockData);
+res.send(stockData);
 //let data = stockData.fb.dataset.data;
 console.log(stockData.fb.dataset.data);
-res.render('index.hbs',{data: stockData.fb.dataset});
+//res.render('index.hbs',{data: stockData.fb.dataset});
 })
 
 }); */
+MongoClient.connect(`mongodb://test:testPass@ds034677.mlab.com:34677/fccstocks`, (err, db) => {
+  if(err) throw err;
 
 app.get('/', (req, res) => {
-  res.render('index.hbs');
+  db.collection('symbol').find({}).toArray((err, docs) => {
+    console.log(`All docs ${docs}`);
+    res.render('index.hbs', {docs});
+  })
+
 })
 let server = app.listen(port, () => {
   console.log(`Listening on port: ${port}`);
@@ -42,10 +50,49 @@ io.on('connection', (socket) => {
 
   socket.on('getStock', stock => {
     console.log(stock);
-    requestStock(stock, data => {
-    io.sockets.emit('getStock', data);
+    db.collection('symbol').find({symbol: stock.toUpperCase()}).toArray((err, doc) => {
+      if(err) throw err;
+      console.log(`Find by symbol: ${doc.length}`);
+
+      if(doc.length > 1) {
+        console.log(`Checking if data is from today`);
+        db.collection('symbol').find({symbol: stock.toUpperCase(), datePulled: moment().format('MM-DD-YYYY')}).toArray((err, data) => {
+          if(err) throw err;
+          if(data.length){
+            io.sockets.emit('getStock', data);
+          } else {
+            console.log(`data  not from today`);
+            requestStock(stock, data => {
+              db.collection('symbol').insertOne({
+                datePulled: moment().format('MM-DD-YYYY'),
+                symbol: data.dataset.dataset_code,
+                startDate: data.dataset.start_date,
+                endDate: data.dataset.end_date,
+                stockDate: data.dataset.data
+              });
+            io.sockets.emit('getStock', data);
+
+        })
+        }
+      }
+    )} else {
+      console.log(`No doc found, inserting`);
+      requestStock(stock, data => {
+        db.collection('symbol').insertOne({
+          datePulled: moment().format('MM-DD-YYYY'),
+          symbol: data.dataset.dataset_code,
+          startDate: data.dataset.start_date,
+          endDate: data.dataset.end_date,
+          stockDate: data.dataset.data
+        });
+      io.sockets.emit('getStock', data);
+
+  })
+    }
+
   });
 });
 
 
+})
 })

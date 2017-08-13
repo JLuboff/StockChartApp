@@ -14,6 +14,7 @@
     "google-stocks": "^1.0.1",
     "hbs": "^4.0.1",
     "moment": "^2.18.1",
+    "mongodb": "^2.2.31",
     "quandl": "0.0.6",
     "socket.io": "^2.0.3"
   }
