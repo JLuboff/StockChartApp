@@ -29,12 +29,13 @@ console.log(stockData.fb.dataset.data);
 })
 
 }); */
+
 MongoClient.connect(`mongodb://test:testPass@ds034677.mlab.com:34677/fccstocks`, (err, db) => {
   if(err) throw err;
 
 app.get('/', (req, res) => {
-  db.collection('symbol').find({}).toArray((err, docs) => {
-    console.log(`All docs ${docs}`);
+  db.collection('symbol').find({datePulled: moment().format('MM-DD-YYYY')}).toArray((err, docs) => {
+    console.log(`All docs ${JSON.stringify(docs)}`);
     res.render('index.hbs', {docs});
   })
 
@@ -54,7 +55,7 @@ io.on('connection', (socket) => {
       if(err) throw err;
       console.log(`Find by symbol: ${doc.length}`);
 
-      if(doc.length > 1) {
+      if(doc.length > 0) {
         console.log(`Checking if data is from today`);
         db.collection('symbol').find({symbol: stock.toUpperCase(), datePulled: moment().format('MM-DD-YYYY')}).toArray((err, data) => {
           if(err) throw err;
@@ -62,13 +63,14 @@ io.on('connection', (socket) => {
             io.sockets.emit('getStock', data);
           } else {
             console.log(`data  not from today`);
+            db.collection('symbol').deleteOne({symbol: stock.toUpperCase()});
             requestStock(stock, data => {
               db.collection('symbol').insertOne({
                 datePulled: moment().format('MM-DD-YYYY'),
                 symbol: data.dataset.dataset_code,
                 startDate: data.dataset.start_date,
                 endDate: data.dataset.end_date,
-                stockDate: data.dataset.data
+                stockData: data.dataset.data
               });
             io.sockets.emit('getStock', data);
 
@@ -83,7 +85,7 @@ io.on('connection', (socket) => {
           symbol: data.dataset.dataset_code,
           startDate: data.dataset.start_date,
           endDate: data.dataset.end_date,
-          stockDate: data.dataset.data
+          stockData: data.dataset.data
         });
       io.sockets.emit('getStock', data);
 

@@ -11,7 +11,10 @@
   <button id="stockBtn">Get Stock</button>
 </div>
 <div id="stockBox"></div>
-<div id="currentData">{{docs}}</div>
+<div id="currentData">{{#each docs}}
+    <p><strong>{{symbol}}:</strong> {{stockData.[0].[1]}}</p>
+    {{/each}}
+</div>
 
 <canvas id="myChart" width="400" height="400"></canvas>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
@@ -30,8 +33,11 @@
 
     socket.on('getStock', (data) => {
       console.log(data.dataset.data[0][1]);
+      createChart(data.dataset.data);
       output.innerHTML += `<p><strong> ${data.dataset.dataset_code}:</strong> ${data.dataset.data[0][1]} </p>`;
     })
+
+
     </script>
     <!--<script>
       $(document).ready(function(){
