@@ -15,8 +15,10 @@
     <p><strong>{{symbol}}:</strong> {{stockData.[0].[1]}}</p>
     {{/each}}
 </div>
-
-<canvas id="myChart" width="400" height="400"></canvas>
+<div class="columns">
+  <div class="column is-6">
+<canvas id="stockChart" width="100" height="100"></canvas>
+</div></div>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js" /></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
@@ -28,37 +30,63 @@
         output = document.getElementById('stockBox');
 
     btn.addEventListener('click', () => {
+
         socket.emit('getStock', stockSymbol.value)
     });
 
     socket.on('getStock', (data) => {
-      console.log(data.dataset.data[0][1]);
-      createChart(data.dataset.data);
-      output.innerHTML += `<p><strong> ${data.dataset.dataset_code}:</strong> ${data.dataset.data[0][1]} </p>`;
+      console.log(data.stockData[0][1]);
+      //createChart(data.dataset.data);
+      output.innerHTML += `<p><strong> ${data.symbol}:</strong> ${data.stockData[0][1]} </p>`;
+      let label = [];
+      let stockPrice = [];
+
+      data.stockData.forEach(el => {
+      //  console.log(el);
+        label.unshift(el[0]);
+        stockPrice.unshift(el[1]);
+      });
+      console.log(label, stockPrice);
+      createChart(label, stockPrice, data.symbol);
     })
 
-
-    </script>
-    <!--<script>
-      $(document).ready(function(){
-      console.log('Tessft');
-    //  console.log({{data}})
-
-    var ctx = document.getElementById("myChart").getContext('2d');
+    const createChart = (label, stockPrice, symbol) => {
+      const ctx = document.getElementById('stockChart').getContext('2d');
+      const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: label,
+          datasets: [{
+            label: symbol,
+            fill: false,
+            data: stockPrice
+          }]
+        }
+      })
+    };
+    /*var ctx = document.getElementById('myChart').getContext('2d');
     var chart = new Chart(ctx, {
-      type: 'line',
-      data:{
-        datasets:
-          data: [{
-        x: '2017-08-09',
-        y:171.18 },
-  {
-    x:'2017-08-08',
-    y:171.23 },
-  { x:'2017-08-07',
-  y:171.98 }]}
-    })
-    })
-  </script> -->
+        // The type of chart we want to create
+        type: 'line',
+
+        // The data for our dataset
+        data: {
+            labels: ["January", "February", "March", "April", "May", "June", "July"],
+            datasets: [{
+                label: "My First dataset",
+                fill: false,
+                data: [0, 10, 5, 2, 20, 30, 45],
+            },
+          {
+            label: 'Second Dataset',
+            fill: false,
+            data: [12, 5, 20, 35, 6, 50, 0]
+          }]
+        },
+
+        // Configuration options go here
+        options: {}
+    }); */
+    </script>
 </body>
 </html>
