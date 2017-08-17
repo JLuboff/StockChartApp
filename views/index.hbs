@@ -6,19 +6,24 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.4.3/css/bulma.css" type="text/css" rel="stylesheet">
 </head>
 <body>
-  <div id="inputStock">
-  <input type="text" id="stockInput" placeholder="Stock symbol" />
-  <button id="stockBtn">Get Stock</button>
+  <div class="columns">
+    <div class="column is-6 is-offset-3">
+  <canvas id="stockChart" width="700" height="500"></canvas>
+  </div></div>
+  <div id="inputStock" class="field has-addons">
+    <div class="control">
+  <input type="text" id="stockInput" placeholder="Stock symbol" class="input"/>
+</div>
+<div class="control">
+  <a id="stockBtn" class="button is-primary">Get Stock</a>
+</div>
 </div>
 <div id="stockBox"></div>
 <div id="currentData">{{#each docs}}
     <p><strong>{{symbol}}:</strong> {{stockData.[0].[1]}}</p>
     {{/each}}
 </div>
-<div class="columns">
-  <div class="column is-6">
-<canvas id="stockChart" width="100" height="100"></canvas>
-</div></div>
+
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js" /></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
@@ -39,19 +44,8 @@
 
 
     socket.on('getStock', (data) => {
-      console.log(data.stockData[0][1]);
-      //createChart(data.dataset.data);
       output.innerHTML += `<p><strong> ${data.symbol}:</strong> ${data.stockData[0][1]} </p>`;
-      let label = [];
-      let stockPrice = [];
-
-      data.stockData.forEach(el => {
-      //  console.log(el);
-        label.unshift(el[0]);
-        stockPrice.unshift(el[1]);
-      });
-      console.log(label, stockPrice);
-      createChart(label);
+      createChart();
     })
 
 
@@ -66,7 +60,6 @@
         label.unshift(el[0]);
         });
         chartData.forEach(el => {
-          console.log(el);
           let labels = [];
           let data = [];
 
@@ -81,13 +74,15 @@
             data: data
           })
         })
-        console.log(obj);
         const ctx = document.getElementById('stockChart').getContext('2d');
         const chart = new Chart(ctx, {
           type: 'line',
           data: {
             labels: label,
             datasets: obj
+          },
+          options: {
+            responsive: false
           }
         })
       })
