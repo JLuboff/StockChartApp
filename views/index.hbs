@@ -23,6 +23,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js" /></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
     <script>
+    $(document).ready(() => {
+
+
     let socket = io.connect('http://localhost:3000');
 
     let stockSymbol = document.getElementById('stockInput'),
@@ -33,6 +36,7 @@
 
         socket.emit('getStock', stockSymbol.value)
     });
+
 
     socket.on('getStock', (data) => {
       console.log(data.stockData[0][1]);
@@ -52,11 +56,15 @@
 
 
 
-    const createChart = (label) => {
+    const createChart = () => {
       $.getJSON('/chartData', chartData => {
         console.log(`Chart Data: ${JSON.stringify(chartData)}`);
         let obj = [];
 
+        label = [];
+        chartData[0].stockData.forEach(el => {
+        label.unshift(el[0]);
+        });
         chartData.forEach(el => {
           console.log(el);
           let labels = [];
@@ -69,6 +77,7 @@
           obj.push({
             label: el.symbol,
             fill: false,
+            borderColor: el.color,
             data: data
           })
         })
@@ -80,47 +89,11 @@
             labels: label,
             datasets: obj
           }
-
-        /*  data: {
-            labels: label,
-            datasets: [{
-              label: symbol,
-              fill: false,
-              data: stockPrice
-            }]
-          } */
         })
-
-
       })
-
-
-
-
     };
-    /*var ctx = document.getElementById('myChart').getContext('2d');
-    var chart = new Chart(ctx, {
-        // The type of chart we want to create
-        type: 'line',
-
-        // The data for our dataset
-        data: {
-            labels: ["January", "February", "March", "April", "May", "June", "July"],
-            datasets: [{
-                label: "My First dataset",
-                fill: false,
-                data: [0, 10, 5, 2, 20, 30, 45],
-            },
-          {
-            label: 'Second Dataset',
-            fill: false,
-            data: [12, 5, 20, 35, 6, 50, 0]
-          }]
-        },
-
-        // Configuration options go here
-        options: {}
-    }); */
+    createChart();
+      })
     </script>
 </body>
 </html>

@@ -8,6 +8,7 @@ const express = require('express'),
       port = process.env.PORT || 3000;
 
 var app = express();
+var randomColorGen = () =>  Math.ceil(Math.random() * 255);
 
 app.set('view engine', 'hbs');
 
@@ -42,7 +43,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/chartData', (req, res) => {
-  db.collection('symbol').find({datePulled: moment().format('MM-DD-YYYY')}, {_id: 0, symbol: 1, stockData: 1}).toArray((err, data) => {
+  db.collection('symbol').find({datePulled: moment().format('MM-DD-YYYY')}, {_id: 0, symbol: 1, stockData: 1, color: 1}).toArray((err, data) => {
     if(err) throw err;
 
     console.log(data);
@@ -76,13 +77,14 @@ io.on('connection', (socket) => {
             console.log(`data  not from today`);
             db.collection('symbol').deleteOne({symbol: stock.toUpperCase()});
             requestStock(stock, data => {
-              console.log(data);
+            //  console.log(data);
               db.collection('symbol').insertOne({
                 datePulled: moment().format('MM-DD-YYYY'),
                 symbol: data.dataset.dataset_code,
                 startDate: data.dataset.start_date,
                 endDate: data.dataset.end_date,
-                stockData: data.dataset.data
+                stockData: data.dataset.data,
+                color: 'rgba('+ randomColorGen() +', ' + randomColorGen() + ', ' + randomColorGen() +', 1.0)'
               }, (err, record) => {
                 console.log(record.ops[0]);
                 io.sockets.emit('getStock', record.ops[0]);
@@ -100,9 +102,10 @@ io.on('connection', (socket) => {
           symbol: data.dataset.dataset_code,
           startDate: data.dataset.start_date,
           endDate: data.dataset.end_date,
-          stockData: data.dataset.data
+          stockData: data.dataset.data,
+          color: 'rgba('+ randomColorGen() +', ' + randomColorGen() + ', ' + randomColorGen() +', 1.0)'
         }, (err, record) => {
-          console.log(record.ops[0]);
+        //  console.log(record.ops[0]);
           io.sockets.emit('getStock', record.ops[0]);
         });
 
