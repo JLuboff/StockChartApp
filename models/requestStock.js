@@ -5,6 +5,7 @@ const querystring = require('querystring'),
 
       const requestStock = function(stock, callback){
         const apiQuery = querystring.stringify({
+          //start_date: moment().subtract(1, 'y').format('YYYY-MM-DD'),
           start_date: moment().subtract(1, 'y').format('YYYY-MM-DD'),
           end_date: moment().subtract(1, 'd').format('YYYY-MM-DD'),
           column_index: 4

@@ -47,22 +47,56 @@
         stockPrice.unshift(el[1]);
       });
       console.log(label, stockPrice);
-      createChart(label, stockPrice, data.symbol);
+      createChart(label);
     })
 
-    const createChart = (label, stockPrice, symbol) => {
-      const ctx = document.getElementById('stockChart').getContext('2d');
-      const chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: label,
-          datasets: [{
-            label: symbol,
+
+
+    const createChart = (label) => {
+      $.getJSON('/chartData', chartData => {
+        console.log(`Chart Data: ${JSON.stringify(chartData)}`);
+        let obj = [];
+
+        chartData.forEach(el => {
+          console.log(el);
+          let labels = [];
+          let data = [];
+
+          el.stockData.forEach(stock => {
+            labels.unshift(stock[0]);
+            data.unshift(stock[1]);
+          })
+          obj.push({
+            label: el.symbol,
             fill: false,
-            data: stockPrice
-          }]
-        }
+            data: data
+          })
+        })
+        console.log(obj);
+        const ctx = document.getElementById('stockChart').getContext('2d');
+        const chart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: label,
+            datasets: obj
+          }
+
+        /*  data: {
+            labels: label,
+            datasets: [{
+              label: symbol,
+              fill: false,
+              data: stockPrice
+            }]
+          } */
+        })
+
+
       })
+
+
+
+
     };
     /*var ctx = document.getElementById('myChart').getContext('2d');
     var chart = new Chart(ctx, {

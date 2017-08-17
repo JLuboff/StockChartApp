@@ -39,7 +39,18 @@ app.get('/', (req, res) => {
     res.render('index.hbs', {docs});
   })
 
-})
+});
+
+app.get('/chartData', (req, res) => {
+  db.collection('symbol').find({datePulled: moment().format('MM-DD-YYYY')}, {_id: 0, symbol: 1, stockData: 1}).toArray((err, data) => {
+    if(err) throw err;
+
+    console.log(data);
+    res.json(data);
+  })
+});
+
+
 let server = app.listen(port, () => {
   console.log(`Listening on port: ${port}`);
 });
