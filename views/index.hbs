@@ -6,23 +6,57 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.4.3/css/bulma.css" type="text/css" rel="stylesheet">
 </head>
 <body>
+  <section class="hero  is-light is-bold">
+    <div class="hero-body">
+      <div class="container">
   <div class="columns">
     <div class="column is-6 is-offset-3">
   <canvas id="stockChart" width="700" height="500"></canvas>
   </div></div>
+  <div class="columns is-centered">
+    <div class="column is-4 is-offset-2">
   <div id="inputStock" class="field has-addons">
     <div class="control">
   <input type="text" id="stockInput" placeholder="Stock symbol" class="input"/>
 </div>
 <div class="control">
-  <a id="stockBtn" class="button is-primary">Get Stock</a>
+  <a id="stockBtn" class="button is-info">Get Stock</a>
 </div>
 </div>
+</div>
+</div>
+</div>
+</div>
+</section>
+  <section class="hero is-medium is-success is-bold">
+    <div class="hero-body">
+      <div class="container">
+
+
 <div id="stockBox"></div>
-<div id="currentData">{{#each docs}}
-    <p><strong>{{symbol}}:</strong> {{stockData.[0].[1]}}</p>
+
+<div id="currentData" class="columns">
+
+    {{#each docs}}
+    <div class="column">
+      <article class="message is-info">
+        <div class="message-header">
+      <p>{{symbol}} </p>
+      <button class="delete is-small" id="{{symbol}}"></button>
+    </div>
+    <div class="message-body">
+
+        Closing Price: ${{stockData.[0].[1]}}
+      </div>
+    </article>
+  </div>
+
     {{/each}}
 </div>
+</div>
+</div>
+
+</section>
 
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js" /></script>
@@ -35,7 +69,7 @@
 
     let stockSymbol = document.getElementById('stockInput'),
         btn = document.getElementById('stockBtn'),
-        output = document.getElementById('stockBox');
+        output = document.getElementById('currentData');
 
     btn.addEventListener('click', () => {
 
@@ -44,7 +78,21 @@
 
 
     socket.on('getStock', (data) => {
-      output.innerHTML += `<p><strong> ${data.symbol}:</strong> ${data.stockData[0][1]} </p>`;
+      output.innerHTML += `
+      <div class="column is-2">
+        <article class="message is-info">
+          <div class="message-header">
+        <p>${data.symbol} </p>
+        <button class="delete is-small"></button>
+      </div>
+      <div class="message-body">
+
+          Closing Price: ${data.stockData[0][1]}
+        </div>
+      </article>
+      </div>
+      `;
+    //  <p><strong> ${data.symbol}:</strong> ${data.stockData[0][1]} </p>
       createChart();
     })
 
