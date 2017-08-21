@@ -13,8 +13,9 @@
     <div class="column is-6 is-offset-3">
   <canvas id="stockChart" width="700" height="500"></canvas>
   </div></div>
-  <div class="columns is-centered">
-    <div class="column is-4 is-offset-2">
+  <div class="columns">
+    <div class="column is-4 is-offset-4">
+      <p id="failed"></p><br>
   <div id="inputStock" class="field has-addons">
     <div class="control">
   <input type="text" id="stockInput" placeholder="Stock symbol" class="input"/>
@@ -68,22 +69,38 @@
     let socket = io.connect('http://localhost:3000');
 
     let stockSymbol = document.getElementById('stockInput'),
-        btn = document.getElementById('stockBtn'),
+        btnAdd = document.getElementById('stockBtn'),
+        failed = document.getElementById('failed'),
         output = document.getElementById('currentData');
 
-    btn.addEventListener('click', () => {
+    btnAdd.addEventListener('click', () => {
 
         socket.emit('getStock', stockSymbol.value)
     });
 
+    $(document).on('click', '.delete', (e) => {
+      console.log(`clicked ${e.target.id}`);
 
-    socket.on('getStock', (data) => {
+      socket.emit('deleteStock', e.target.id );
+    })
+
+    socket.on('connect', () => {
+      console.log(socket.id);
+    })
+
+    socket.on('getStock', data => {
+      if($.isArray(data) && data[1] === socket.id){
+        $('#failed').empty();
+        return failed.innerHTML += `<span id="failed" class="tag is-danger">${data[0]}</span>`
+      };
+
+      $('#failed').empty();
       output.innerHTML += `
       <div class="column is-2">
         <article class="message is-info">
           <div class="message-header">
         <p>${data.symbol} </p>
-        <button class="delete is-small"></button>
+        <button class="delete is-small" id="${data.symbol}"></button>
       </div>
       <div class="message-body">
 
@@ -96,11 +113,32 @@
       createChart();
     })
 
+    socket.on('deleteStock', data => {
+      console.log(data);
 
+      $('#currentData').empty();
+      data.forEach(el => {
+      output.innerHTML += `
+      <div class="column is-2">
+        <article class="message is-info">
+          <div class="message-header">
+        <p>${el.symbol} </p>
+        <button class="delete is-small" id="${el.symbol}"></button>
+      </div>
+      <div class="message-body">
+
+          Closing Price: ${el.stockData[0][1]}
+        </div>
+      </article>
+      </div>
+      `;
+      })
+      createChart();
+    })
 
     const createChart = () => {
       $.getJSON('/chartData', chartData => {
-        console.log(`Chart Data: ${JSON.stringify(chartData)}`);
+
         let obj = [];
 
         label = [];
@@ -130,7 +168,7 @@
             datasets: obj
           },
           options: {
-            responsive: false
+            responsive: true
           }
         })
       })

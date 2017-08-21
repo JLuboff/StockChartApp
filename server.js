@@ -34,88 +34,96 @@ console.log(stockData.fb.dataset.data);
 MongoClient.connect(`mongodb://test:testPass@ds034677.mlab.com:34677/fccstocks`, (err, db) => {
   if(err) throw err;
 
-app.get('/', (req, res) => {
-  db.collection('symbol').find({datePulled: moment().format('MM-DD-YYYY')}).toArray((err, docs) => {
-    //console.log(`All docs ${JSON.stringify(docs)}`);
-    res.render('index.hbs', {docs});
-  })
-
-});
-
-app.get('/chartData', (req, res) => {
-  db.collection('symbol').find({datePulled: moment().format('MM-DD-YYYY')}, {_id: 0, symbol: 1, stockData: 1, color: 1}).toArray((err, data) => {
-    if(err) throw err;
-
-    console.log(data);
-    res.json(data);
-  })
-});
-
-
-let server = app.listen(port, () => {
-  console.log(`Listening on port: ${port}`);
-});
-
-let io = socket(server);
-
-io.on('connection', (socket) => {
-  console.log(`Socket connection made ${socket.id}`);
-
-  socket.on('getStock', stock => {
-    console.log(stock);
-    db.collection('symbol').find({symbol: stock.toUpperCase()}).toArray((err, doc) => {
-      if(err) throw err;
-      console.log(`Find by symbol: ${doc.length}`);
-
-      if(doc.length > 0) {
-        console.log(`Checking if data is from today`);
-        db.collection('symbol').find({symbol: stock.toUpperCase(), datePulled: moment().format('MM-DD-YYYY')}).toArray((err, data) => {
-          if(err) throw err;
-          if(data.length){
-            io.sockets.emit('getStock', data);
-          } else {
-            console.log(`data  not from today`);
-            db.collection('symbol').deleteOne({symbol: stock.toUpperCase()});
-            requestStock(stock, data => {
-            //  console.log(data);
-              db.collection('symbol').insertOne({
-                datePulled: moment().format('MM-DD-YYYY'),
-                symbol: data.dataset.dataset_code,
-                startDate: data.dataset.start_date,
-                endDate: data.dataset.end_date,
-                stockData: data.dataset.data,
-                color: 'rgba('+ randomColorGen() +', ' + randomColorGen() + ', ' + randomColorGen() +', 1.0)'
-              }, (err, record) => {
-                console.log(record.ops[0]);
-                io.sockets.emit('getStock', record.ops[0]);
-              });
-
-        })
-        }
-      }
-    )} else {
-      console.log(`No doc found, inserting`);
-      requestStock(stock, data => {
-        console.log(data);
-        db.collection('symbol').insertOne({
-          datePulled: moment().format('MM-DD-YYYY'),
-          symbol: data.dataset.dataset_code,
-          startDate: data.dataset.start_date,
-          endDate: data.dataset.end_date,
-          stockData: data.dataset.data,
-          color: 'rgba('+ randomColorGen() +', ' + randomColorGen() + ', ' + randomColorGen() +', 1.0)'
-        }, (err, record) => {
-        //  console.log(record.ops[0]);
-          io.sockets.emit('getStock', record.ops[0]);
-        });
-
-
-  })
-    }
+  app.get('/', (req, res) => {
+    db.collection('symbol').find({datePulled: moment().format('MM-DD-YYYY')}).toArray((err, docs) => {
+      //console.log(`All docs ${JSON.stringify(docs)}`);
+      res.render('index.hbs', {docs});
+    })
 
   });
-});
+
+  app.get('/chartData', (req, res) => {
+    db.collection('symbol').find({datePulled: moment().format('MM-DD-YYYY')}, {_id: 0, symbol: 1, stockData: 1, color: 1}).toArray((err, data) => {
+      if(err) throw err;
+
+      res.json(data);
+    })
+  });
 
 
-})
+  let server = app.listen(port, () => {
+    console.log(`Listening on port: ${port}`);
+  });
+
+  let io = socket(server);
+
+  io.on('connection', (socket) => {
+    console.log(`Socket connection made ${socket.id}`);
+
+    socket.on('getStock', stock => {
+      console.log(stock);
+      db.collection('symbol').find({symbol: stock.toUpperCase()}).toArray((err, doc) => {
+        if(err) throw err;
+        console.log(`Find by symbol: ${doc.length}`);
+
+        if(doc.length > 0) {
+          console.log(`Checking if data is from today`);
+          db.collection('symbol').find({symbol: stock.toUpperCase(), datePulled: moment().format('MM-DD-YYYY')}).toArray((err, data) => {
+            if(err) throw err;
+            if(data.length){
+              io.sockets.emit('getStock', data);
+            } else {
+              console.log(`data  not from today`);
+              db.collection('symbol').deleteOne({symbol: stock.toUpperCase()});
+              requestStock(stock, data => {
+                //  console.log(data);
+                db.collection('symbol').insertOne({
+                  datePulled: moment().format('MM-DD-YYYY'),
+                  symbol: data.dataset.dataset_code,
+                  startDate: data.dataset.start_date,
+                  endDate: data.dataset.end_date,
+                  stockData: data.dataset.data,
+                  color: 'rgba('+ randomColorGen() +', ' + randomColorGen() + ', ' + randomColorGen() +', 1.0)'
+                }, (err, record) => {
+                  console.log(record.ops[0]);
+                  io.sockets.emit('getStock', record.ops[0]);
+                });
+              })
+            }
+          }
+        )} else {
+          console.log(`No doc found, inserting`);
+          requestStock(stock, data => {
+            console.log(data);
+            if(data.dataset === undefined){
+              console.log(`Symbol not found: ${socket.id}`);
+              io.sockets.emit('getStock', ['Symbol not recognized. Please try another.', socket.id]);
+            } else {
+            db.collection('symbol').insertOne({
+              datePulled: moment().format('MM-DD-YYYY'),
+              symbol: data.dataset.dataset_code,
+              startDate: data.dataset.start_date,
+              endDate: data.dataset.end_date,
+              stockData: data.dataset.data,
+              color: 'rgba('+ randomColorGen() +', ' + randomColorGen() + ', ' + randomColorGen() +', 1.0)'
+            }, (err, record) => {
+              //  console.log(record.ops[0]);
+              io.sockets.emit('getStock', record.ops[0]);
+            });
+          }})
+        }
+      });
+    });
+
+    socket.on('deleteStock', stock => {
+      console.log(stock);
+      db.collection('symbol').remove({symbol: stock}, (err, removed) => {
+        if(err) throw err;
+        db.collection('symbol').find({datePulled: moment().format('MM-DD-YYYY')}).toArray((err, doc) => {
+          if(err) throw err;
+          io.sockets.emit('deleteStock', doc);
+        })
+      });
+    })
+  })
 })
