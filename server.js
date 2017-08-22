@@ -42,6 +42,11 @@ MongoClient.connect(`mongodb://test:testPass@ds034677.mlab.com:34677/fccstocks`,
 
   });
 
+  app.get('/getCurrent', (req, res) => {
+    db.collection('symbol').find({datePulled: moment().format('MM-DD-YYYY')}, {_id: 0, stockData: 1, symbol: 1}).toArray((err, docs) => {
+      res.json(docs);
+    })
+  })
   app.get('/chartData', (req, res) => {
     db.collection('symbol').find({datePulled: moment().format('MM-DD-YYYY')}, {_id: 0, symbol: 1, stockData: 1, color: 1}).toArray((err, data) => {
       if(err) throw err;
