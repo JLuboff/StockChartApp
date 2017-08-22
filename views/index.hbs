@@ -9,6 +9,10 @@
   <section class="hero  is-light is-bold">
     <div class="hero-body">
       <div class="container">
+        <button id="oneWeek">1 Week</button>
+        <button id="oneMonth">1 Month</button>
+        <button id="sixMonths">6 Months</button>
+        <button id="oneYear">1 Year</button><br>
         <div class="columns">
           <div class="column is-6 is-offset-3">
             <canvas id="stockChart" width="700" height="500"></canvas>
@@ -39,28 +43,32 @@
       </div>
   </section>
 
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js" /></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
-    <script>
-    $(document).ready(() => {
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js" /></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.js" /></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
+<script>
+$(document).ready(() => {
+	let socket = io.connect('http://localhost:3000');
 
-    let socket = io.connect('http://localhost:3000');
+	let stockSymbol = document.getElementById('stockInput'),
+		btnAdd = document.getElementById('stockBtn'),
+		failed = document.getElementById('failed'),
+		output = document.getElementById('currentData'),
+    oneWeek = document.getElementById('oneWeek'),
+    oneMonth = document.getElementById('oneMonth'),
+    oneYear = document.getElementById('oneYear'),
+    sixMonths = document.getElementById('sixMonths');
 
-    let stockSymbol = document.getElementById('stockInput'),
-        btnAdd = document.getElementById('stockBtn'),
-        failed = document.getElementById('failed'),
-        output = document.getElementById('currentData');
+	const displayStocks = () => {
+		$.getJSON(`/getCurrent`, currentData => {
+			let displayDataStartDiv = `<div class="columns">`,
+				displayDataEndDiv = `</div>`,
+				displayData = [],
+				displayOutput = '';
 
-    const displayStocks = () => {
-      $.getJSON(`/getCurrent`, currentData => {
-        let displayDataStartDiv = `<div class="columns">`,
-            displayDataEndDiv = `</div>`,
-            displayData = [],
-            displayOutput = "";
-
-        currentData.forEach(el => {
-          displayData.push(`<div class="column is-3">
+			currentData.forEach(el => {
+				displayData.push(`<div class="column is-3">
           <article class="message is-info">
           <div class="message-header">
           <p>${el.symbol}</p>
@@ -71,89 +79,105 @@
           </div>
           </article>
           </div>
-          `)
-        });
+          `);
+			});
 
-        displayOutput+= displayDataStartDiv;
-        displayData.forEach((out, i) => {
-          if(i % 4 === 0){
-            displayOutput += `</div><div class="columns">`;
-            displayOutput += out;
-          } else {
-            displayOutput += out;
-          }
-        })
-        displayOutput+=displayDataEndDiv;
-        $('#currentData').empty();
-        output.innerHTML += displayOutput;
-      })
-    };
+			displayOutput += displayDataStartDiv;
+			displayData.forEach((out, i) => {
+				if (i % 4 === 0) {
+					displayOutput += `</div><div class="columns">`;
+					displayOutput += out;
+				} else {
+					displayOutput += out;
+				}
+			});
+			displayOutput += displayDataEndDiv;
+			$('#currentData').empty();
+			output.innerHTML += displayOutput;
+		});
+	};
 
-    const createChart = () => {
-      $.getJSON('/chartData', chartData => {
-        let obj = [],
-            label = [];
+	const createChart = timeLength => {
+		$.getJSON(`/chartData/${timeLength}`, chartData => {
+			let obj = [],
+				label = [];
 
-        chartData[0].stockData.forEach(el => {
-        label.unshift(el[0]);
-        });
-        chartData.forEach(el => {
-          let labels = [],
-              data = [];
+			chartData[0].stockData.forEach(el => {
+				label.unshift(el[0]);
+			});
+			chartData.forEach(el => {
+				let labels = [],
+					data = [];
 
-          el.stockData.forEach(stock => {
-            labels.unshift(stock[0]);
-            data.unshift(stock[1]);
-          })
-          obj.push({
-            label: el.symbol,
-            fill: false,
-            borderColor: el.color,
-            data: data
-          })
-        });
+				el.stockData.forEach(stock => {
+					labels.unshift(stock[0]);
+					data.unshift(stock[1]);
+				});
+				obj.push({
+					label: el.symbol,
+					fill: false,
+					borderColor: el.color,
+					data: data
+				});
+			});
 
-        const ctx = document.getElementById('stockChart').getContext('2d');
-        const chart = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: label,
-            datasets: obj
-          },
-          options: {
-            responsive: true
-          }
-        })
-      })
-    };
+			const ctx = document.getElementById('stockChart').getContext('2d');
+			const chart = new Chart(ctx, {
+				type: 'line',
+				data: {
+					labels: label,
+					datasets: obj
+				},
+				options: {
+					responsive: true
+				}
+			});
+		});
+	};
 
-    btnAdd.addEventListener('click', () => {
-        socket.emit('getStock', stockSymbol.value)
-    });
+	btnAdd.addEventListener('click', () => {
+		socket.emit('getStock', stockSymbol.value);
+	});
 
-    $(document).on('click', '.delete', (e) => {
-      socket.emit('deleteStock', e.target.id );
-    })
+  oneWeek.addEventListener('click', () =>{
+    createChart(moment().subtract(1, 'w').format('YYYY-MM-DD'));
+  });
 
-    socket.on('getStock', data => {
-      if($.isArray(data) && data[1] === socket.id){
-        $('#failed').empty();
-        return failed.innerHTML += `<span id="failed" class="tag is-danger">${data[0]}</span>`
-      };
+  oneMonth.addEventListener('click', () =>{
+    createChart(moment().subtract(1, 'M').format('YYYY-MM-DD'));
+  });
 
-      $('#failed').empty();
-      displayStocks();
-      createChart();
-    });
+  sixMonths.addEventListener('click', () =>{
+    createChart(moment().subtract(6, 'M').format('YYYY-MM-DD'));
+  });
 
-    socket.on('deleteStock', data => {
-      displayStocks();
-      createChart();
-    });
-
-    displayStocks();
+  oneYear.addEventListener('click', () =>{
     createChart();
   });
-    </script>
+
+	$(document).on('click', '.delete', e => {
+		socket.emit('deleteStock', e.target.id);
+	});
+
+	socket.on('getStock', data => {
+		if ($.isArray(data) && data[1] === socket.id) {
+			$('#failed').empty();
+			return (failed.innerHTML += `<span id="failed" class="tag is-danger">${data[0]}</span>`);
+		}
+
+		$('#failed').empty();
+		displayStocks();
+		createChart();
+	});
+
+	socket.on('deleteStock', data => {
+		displayStocks();
+		createChart();
+	});
+
+	displayStocks();
+	createChart();
+});
+</script>
 </body>
 </html>
