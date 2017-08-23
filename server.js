@@ -1,5 +1,5 @@
 const express = require('express'),
-	requestStock = require('./models/requestStock'),
+	requestStock = require('./services/requestStock'),
 	hbs = require('hbs'),
 	socket = require('socket.io'),
 	MongoClient = require('mongodb').MongoClient,
