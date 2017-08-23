@@ -21,7 +21,6 @@ const requestStock = function(stock, callback) {
 		res.setEncoding('utf8');
 
 		res.on('data', chunk => {
-			//console.log(data);
 			data += chunk;
 		});
 

@@ -1,6 +1,5 @@
 const express = require('express'),
 	requestStock = require('./models/requestStock'),
-	async = require('async'),
 	hbs = require('hbs'),
 	socket = require('socket.io'),
 	MongoClient = require('mongodb').MongoClient,
@@ -13,7 +12,7 @@ var randomColorGen = () => Math.ceil(Math.random() * 255);
 app.set('view engine', 'hbs');
 
 MongoClient.connect(
-	`mongodb://test:testPass@ds034677.mlab.com:34677/fccstocks`,
+	`mongodb://${process.env.MONGOUSER}:${process.env.MONGOPASS}@ds034677.mlab.com:34677/fccstocks`,
 	(err, db) => {
 		if (err) throw err;
 
@@ -88,19 +87,16 @@ MongoClient.connect(
 		let io = socket(server);
 
 		io.on('connection', socket => {
-			console.log(`Socket connection made ${socket.id}`);
-
 			socket.on('getStock', stock => {
-				console.log(stock);
+				//If check our database to see if stock is currently stored
 				db
 					.collection('symbol')
 					.find({ symbol: stock.toUpperCase() })
 					.toArray((err, doc) => {
 						if (err) throw err;
-						console.log(`Find by symbol: ${doc.length}`);
-
+						//If stock is found in database, check if its from today, if so serve it, if not, remove and get fresh data
 						if (doc.length > 0) {
-							console.log(`Checking if data is from today`);
+							//Checks to see if data is from today
 							db
 								.collection('symbol')
 								.find({
@@ -112,12 +108,11 @@ MongoClient.connect(
 									if (data.length) {
 										io.sockets.emit('getStock', data);
 									} else {
-										console.log(`data  not from today`);
+										//Data not from today, so requests fresh data
 										db
 											.collection('symbol')
 											.deleteOne({ symbol: stock.toUpperCase() });
 										requestStock(stock, data => {
-											//  console.log(data);
 											db.collection('symbol').insertOne({
 												datePulled: moment().format('MM-DD-YYYY'),
 												symbol: data.dataset.dataset_code,
@@ -133,23 +128,22 @@ MongoClient.connect(
 													randomColorGen() +
 													', 1.0)'
 											}, (err, record) => {
-												console.log(record.ops[0]);
 												io.sockets.emit('getStock', record.ops[0]);
 											});
 										});
 									}
 								});
 						} else {
-							console.log(`No doc found, inserting`);
+							//Symbol not found, inserting to database
 							requestStock(stock, data => {
-								console.log(data);
+								//Checks to see if symbol was found, if not, returns message to be emitted to requesting user only
 								if (data.dataset === undefined) {
-									console.log(`Symbol not found: ${socket.id}`);
 									io.sockets.emit('getStock', [
 										'Symbol not recognized. Please try another.',
 										socket.id
 									]);
 								} else {
+									//symbol found in request, and data sent
 									db.collection('symbol').insertOne({
 										datePulled: moment().format('MM-DD-YYYY'),
 										symbol: data.dataset.dataset_code,
@@ -165,7 +159,6 @@ MongoClient.connect(
 											randomColorGen() +
 											', 1.0)'
 									}, (err, record) => {
-										//  console.log(record.ops[0]);
 										io.sockets.emit('getStock', record.ops[0]);
 									});
 								}
@@ -175,17 +168,9 @@ MongoClient.connect(
 			});
 
 			socket.on('deleteStock', stock => {
-				console.log(stock);
-				db.collection('symbol').remove({ symbol: stock }, (err, removed) => {
-					if (err) throw err;
-					db
-						.collection('symbol')
-						.find({ datePulled: moment().format('MM-DD-YYYY') })
-						.toArray((err, doc) => {
-							if (err) throw err;
-							io.sockets.emit('deleteStock', doc);
-						});
-				});
+				//removes stock from database
+				db.collection('symbol').remove({ symbol: stock });
+				io.sockets.emit('deleteStock');
 			});
 		});
 	}

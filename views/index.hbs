@@ -52,7 +52,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
 <script>
 $(document).ready(() => {
-	let socket = io.connect('http://localhost:3000');
+	let socket = io.connect('https://stockchart-jluboff.herokuapp.com/');
 
 	let stockSymbol = document.getElementById('stockInput'),
 		btnAdd = document.getElementById('stockBtn'),
@@ -78,7 +78,7 @@ $(document).ready(() => {
           <button class="delete is-small" id="${el.symbol}"></button>
           </div>
           <div class="message-body">
-          Closing Price: ${el.stockData[0][1]}
+          Prior Day Closing Price: ${el.stockData[0][1]}
           </div>
           </article>
           </div>
