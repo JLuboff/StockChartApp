@@ -87,11 +87,13 @@ MongoClient.connect(
 		let io = socket(server);
 
 		io.on('connection', socket => {
+      console.log(socket.id);
 			socket.on('getStock', stock => {
+        stock = stock.toUpperCase().trim();
 				//If check our database to see if stock is currently stored
 				db
 					.collection('symbol')
-					.find({ symbol: stock.toUpperCase() })
+					.find({ symbol: stock})
 					.toArray((err, doc) => {
 						if (err) throw err;
 						//If stock is found in database, check if its from today, if so serve it, if not, remove and get fresh data
@@ -100,7 +102,7 @@ MongoClient.connect(
 							db
 								.collection('symbol')
 								.find({
-									symbol: stock.toUpperCase(),
+									symbol: stock,
 									datePulled: moment().format('MM-DD-YYYY')
 								})
 								.toArray((err, data) => {
@@ -111,7 +113,7 @@ MongoClient.connect(
 										//Data not from today, so requests fresh data
 										db
 											.collection('symbol')
-											.deleteOne({ symbol: stock.toUpperCase() });
+											.deleteOne({ symbol: stock });
 										requestStock(stock, data => {
 											db.collection('symbol').insertOne({
 												datePulled: moment().format('MM-DD-YYYY'),

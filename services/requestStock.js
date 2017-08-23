@@ -3,6 +3,7 @@ const querystring = require('querystring'),
 	moment = require('moment');
 
 const requestStock = function(stock, callback) {
+  console.log(stock);
 	const apiQuery = querystring.stringify({
 		start_date: moment().subtract(1, 'y').format('YYYY-MM-DD'),
 		end_date: moment().subtract(1, 'd').format('YYYY-MM-DD'),
