@@ -9,13 +9,16 @@
   <section class="hero  is-light is-bold">
     <div class="hero-body">
       <div class="container">
-        <button id="oneWeek">1 Week</button>
-        <button id="oneMonth">1 Month</button>
-        <button id="sixMonths">6 Months</button>
-        <button id="oneYear">1 Year</button><br>
+
         <div class="columns">
           <div class="column is-6 is-offset-3">
+            <a class="button is-success is-outlined is-small" id="oneWeek">1 Week</a>
+            <a class="button is-success is-outlined is-small" id="oneMonth">1 Month</a>
+            <a class="button is-success is-outlined is-small" id="sixMonths">6 Months</a>
+            <a class="button is-success is-outlined is-small" id="oneYear">1 Year</a><br>
+            <div id="chartContainer">
             <canvas id="stockChart" width="700" height="500"></canvas>
+            </div>
           </div>
         </div>
           <div class="columns">
@@ -98,7 +101,9 @@ $(document).ready(() => {
 	};
 
 	const createChart = timeLength => {
+
 		$.getJSON(`/chartData/${timeLength}`, chartData => {
+      console.log(chartData);
 			let obj = [],
 				label = [];
 
@@ -120,9 +125,11 @@ $(document).ready(() => {
 					data: data
 				});
 			});
+     $('#chartContainer').empty();
+     $('#chartContainer').append(`<canvas id="stockChart" width="700" height="500"></canvas>`);
 
 			const ctx = document.getElementById('stockChart').getContext('2d');
-			const chart = new Chart(ctx, {
+			window.chart = new Chart(ctx, {
 				type: 'line',
 				data: {
 					labels: label,

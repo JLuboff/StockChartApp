@@ -46,42 +46,38 @@ MongoClient.connect(
 						return res.json(data);
 					});
 			} else {
-				db
-					.collection('symbol')
-					.aggregate(
-						[
-							{ $unwind: '$stockData' },
-							{
-								$match: {
-									stockData: {
-										$gte: req.params.timeLength,
-										$lte: moment().format('YYYY-MM-DD')
-									}
-								}
-							},
-							{ $project: { _id: 1, symbol: 1, stockData: 1, color: 1 } },
-							{
-								$group: {
-									_id: '$_id',
-									symbol: { $push: '$symbol' },
-									color: { $push: '$color' },
-									stockData: { $push: '$stockData' }
-								}
-							},
-							{
-								$project: {
-									symbol: { $arrayElemAt: ['$symbol', 0] },
-									stockData: 1,
-									color: { $arrayElemAt: ['$color', 0] }
-								}
+				db.collection('symbol').aggregate([
+					{ $unwind: '$stockData' },
+					{
+						$match: {
+							datePulled: moment().format('MM-DD-YYYY'),
+							stockData: {
+								$gte: req.params.timeLength,
+								$lte: moment().format('YYYY-MM-DD')
 							}
-						],
-						(err, doc) => {
-							if (err) throw err;
-
-							return res.json(doc);
 						}
-					);
+					},
+					{ $project: { _id: 1, symbol: 1, stockData: 1, color: 1 } },
+					{
+						$group: {
+							_id: '$_id',
+							symbol: { $push: '$symbol' },
+							color: { $push: '$color' },
+							stockData: { $push: '$stockData' }
+						}
+					},
+					{
+						$project: {
+							symbol: { $arrayElemAt: ['$symbol', 0] },
+							stockData: 1,
+							color: { $arrayElemAt: ['$color', 0] }
+						}
+					}
+				], (err, doc) => {
+					if (err) throw err;
+
+					return res.json(doc);
+				});
 			}
 		});
 
