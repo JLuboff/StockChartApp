@@ -7,7 +7,8 @@ const requestStock = function(stock, callback) {
 	const apiQuery = querystring.stringify({
 		start_date: moment().subtract(1, 'y').format('YYYY-MM-DD'),
 		end_date: moment().subtract(1, 'd').format('YYYY-MM-DD'),
-		column_index: 4
+		column_index: 4,
+    api_key: process.env.APIKEY
 	});
 
 	const options = {

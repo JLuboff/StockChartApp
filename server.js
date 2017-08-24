@@ -87,7 +87,6 @@ MongoClient.connect(
 		let io = socket(server);
 
 		io.on('connection', socket => {
-      console.log(socket.id);
 			socket.on('getStock', stock => {
         stock = stock.toUpperCase().trim();
 				//If check our database to see if stock is currently stored
