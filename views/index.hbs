@@ -104,7 +104,12 @@ $(document).ready(() => {
 		$.getJSON(`/chartData/${timeLength}`, chartData => {
 			let obj = [],
 				label = [];
-
+        
+      if(!chartData.length){
+      $('#chartContainer').empty();
+      return;
+      };
+      
 			chartData[0].stockData.forEach(el => {
 				label.unshift(el[0]);
 			});
