@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>FCC-Stock Chart App</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.4.3/css/bulma.css" type="text/css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.4.3/css/bulma.min.css" type="text/css" rel="stylesheet">
 </head>
 <body>
   <section class="hero  is-light is-bold">
@@ -101,9 +101,7 @@ $(document).ready(() => {
 	};
 
 	const createChart = timeLength => {
-
 		$.getJSON(`/chartData/${timeLength}`, chartData => {
-      console.log(chartData);
 			let obj = [],
 				label = [];
 
