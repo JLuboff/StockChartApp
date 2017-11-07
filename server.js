@@ -143,7 +143,12 @@ MongoClient.connect(
 										'Symbol not recognized. Please try another.',
 										socket.id
 									]);
-								} else {
+								} else if (data.dataset.data.length === 0){
+									io.sockets.emit('getStock', [
+										'No current data found. Please try another.',
+										socket.id
+									]);
+                } else {
 									//symbol found in request, and data sent
 									db.collection('symbol').insertOne({
 										datePulled: moment().format('MM-DD-YYYY'),
